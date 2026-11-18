@@ -57,6 +57,12 @@ flowchart TB
 
 The PoC was tested and worked: audio and video files selected inside the Windows guest were streamed compressed over SPICE and played back natively on the Linux client, with remote control of playback from the guest.
 
+**Scope.** The PoC covers media files stored locally in the VM. Since decoding is delegated to mpv, the whole range of audio and video formats supported by mpv/FFmpeg is available without extra work.
+
+**Test results.** The client side was tested on low-end hardware — a plain Pentium dual-core thin client with 4 GB of RAM — playing **1080p H.264 and H.265** video **without dropped frames**. CPU/iGPU load on the client naturally differed between the two codecs, but playback stayed smooth in both cases. On even weaker hardware, mpv's frame-dropping offers a graceful fallback instead of stuttering.
+
+This is the point of the concept: a modest client can play media that would be unwatchable if decoded inside the VM and pushed as remote display frames.
+
 Known functional limitations at the time of archiving:
 
 - the backend could crash after the first playback when mpv was quit from its OSD;
@@ -87,6 +93,16 @@ The PoC was built to prove feasibility, not to be safe. The design and the code 
 | I4 | spice-conduit-d | `Service-Install.ps1` registers the service with the default account (**LocalSystem**). A bug in the service runs with the highest privileges in the guest. | Medium |
 | I5 | bPlayer frontend ↔ conduit | Localhost TCP (`60999`) instead of a named pipe with an ACL: any local process can connect. | Medium |
 | I6 | All | Debug logging to stdout/console, no hardening flags, no fuzzing, no tests. | Low |
+
+## Envisioned evolution: browser redirection
+
+The natural next step, never implemented, was a **browser extension** (e.g. for Chrome) that intercepts web media playback inside the VM and redirects the stream into the Charon channel, so that web video would also be decoded and played on the client instead of inside the VM.
+
+Points anyone exploring this should consider:
+
+- a browser extension cannot open the conduit by itself: it needs a companion **native messaging host** in the guest, which becomes a new privileged bridge between web content and the client;
+- the stream source becomes **remote, untrusted web content**, which widens risk D1 considerably: client-side sandboxing of the decoder (improvement 7) becomes mandatory, not optional;
+- adaptive streaming (HLS/DASH) and **DRM-protected** content (EME/Widevine) cannot simply be redirected; the realistic target is unencrypted media, or passing the URL rather than the bytes when the client is allowed to reach it directly — which in turn raises network-policy and data-leak questions in managed environments.
 
 ## Possible improvements and fixes
 
