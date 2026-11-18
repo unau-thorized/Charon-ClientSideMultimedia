@@ -59,3 +59,7 @@ Each repository has its own build notes. In short: Qt 5 + QtCreator for bPlayer 
 ## Author
 
 *Unau Thorized* · [spaziocurvo.com](https://www.spaziocurvo.com)
+
+## License
+
+This repository (documentation) is released under the [MIT License](LICENSE). Each component repository keeps its own license, as listed above.
