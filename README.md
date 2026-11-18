@@ -59,6 +59,12 @@ The PoC was tested and worked: audio and video files selected inside the Windows
 
 **Scope.** The PoC covers media files stored locally in the VM. Since decoding is delegated to mpv, the whole range of audio and video formats supported by mpv/FFmpeg is available without extra work.
 
+**Test environment.**
+
+- **Virtualization:** Red Hat Virtualization (RHEV) infrastructure hosting **Windows 10** VMs, accessed over SPICE.
+- **Production-like client:** a live Linux distribution, loaded on the fly at boot, that started `virt-viewer`/`remote-viewer` in **kiosk mode**.
+- **Development client:** a **CentOS** workstation used to build, deploy and debug the client-side components (patched remote-viewer, bPlayer backend).
+
 **Test results.** The client side was tested on low-end hardware — a plain Pentium dual-core thin client with 4 GB of RAM — playing **1080p H.264 and H.265** video **without dropped frames**. CPU/iGPU load on the client naturally differed between the two codecs, but playback stayed smooth in both cases. On even weaker hardware, mpv's frame-dropping offers a graceful fallback instead of stuttering.
 
 This is the point of the concept: a modest client can play media that would be unwatchable if decoded inside the VM and pushed as remote display frames.
