@@ -18,17 +18,23 @@ Charon ferries the media file, still compressed, from the Windows guest across t
 
 ## Architecture
 
-```
- Windows guest (VM)                         Linux client
-┌────────────────────────────┐            ┌──────────────────────────────────┐
-│ bPlayer frontend (Qt GUI)  │            │ bPlayer backend ──► mpv           │
-│        │ TCP localhost:60999│            │        ▲  local socket            │
-│        ▼                   │            │        │  (port auto-detected)    │
-│ spice-conduit-d (service)  │   SPICE    │ remote-viewer (patched,           │
-│        │ virtio-serial port├───────────►│   "conduit" branch)               │
-│        ▼                   │  port      │                                   │
-│ \\.\global\io.bplayer.data.0│ channel   │                                   │
-└────────────────────────────┘            └──────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph G["Windows guest (VM)"]
+        FE["bPlayer frontend<br/>(Qt GUI)"]
+        CD["spice-conduit-d<br/>(Windows service)"]
+        VP["virtio-serial port<br/>\\.\global\io.bplayer.data.0"]
+        FE -- "TCP localhost:60999" --> CD
+        CD --> VP
+    end
+    subgraph C["Linux client"]
+        RV["remote-viewer<br/>(patched, conduit branch)"]
+        BE["bPlayer backend"]
+        MPV["mpv"]
+        RV -- "local Unix socket<br/>(auto-detected)" --> BE
+        BE --> MPV
+    end
+    VP == "SPICE port channel" ==> RV
 ```
 
 1. **bPlayer frontend** (guest) — the user drops a media file; the frontend serves its bytes and sends control commands (play, pause, seek, volume) through a custom stream/control protocol.
